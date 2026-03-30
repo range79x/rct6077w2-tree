@@ -1,0 +1,7 @@
+# RCT6077W2 Recovery fstab
+/dev/block/mtdblock7  /system   ext4  ro,barrier=1  wait
+/dev/block/mtdblock8  /data     ext4  rw,nosuid,nodev,noatime,nodiratime,barrier=1  wait
+/dev/block/mtdblock5  /cache    ext4  rw,nosuid,nodev,noatime,nodiratime,barrier=1  wait
+/dev/block/mtdblock2  /boot     emmc  rw  wait
+/dev/block/mtdblock3  /recovery emmc  rw  wait
+/dev/block/mtdblock4  /backup   emmc  rw  wait
