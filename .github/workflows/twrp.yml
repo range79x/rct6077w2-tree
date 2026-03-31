@@ -47,6 +47,7 @@ jobs:
       run: |
         find build/ system/core/ external/sepolicy/ bionic/ -type f -name "*.mk" -exec sed -i 's/-Werror[-=a-zA-Z0-9]*//g' {} +
         cat << 'EOF' >> build/core/definitions.mk
+
         define _extract-and-include-single-target-whole-static-lib
         @echo "preparing StaticLib: $(PRIVATE_MODULE)"
         $(hide) ldir=$(PRIVATE_INTERMEDIATES_DIR)/WHOLE/$(basename $(notdir $(1)))_objs;\
@@ -60,8 +61,10 @@ jobs:
             for f in `find $$ldir -name '*.o'`; do \
                 filelist="$$filelist $$f"; \
             done; \
-            $($(PRIVATE_2ND_ARCH_VAR_PREFIX)TARGET_AR) $($(PRIVATE_2ND_ARCH_VAR_PREFIX)TARGET_GLOBAL_ARFLAGS) $(PRIVATE_ARFLAGS) $@ $$filelist
+            $($(PRIVATE_2ND_ARCH_VAR_PREFIX)TARGET_AR) $($(PRIVATE_2ND_ARCH_VAR_PREFIX)TARGET_GLOBAL_ARFLAGS) $(PRIVATE_ARFLAGS) $@ $$filelist;
+
         endef
+
         define _extract-and-include-single-host-whole-static-lib
         @echo "preparing StaticLib: $(PRIVATE_MODULE)"
         $(hide) ldir=$(PRIVATE_INTERMEDIATES_DIR)/WHOLE/$(basename $(notdir $(1)))_objs;\
@@ -75,7 +78,8 @@ jobs:
             for f in `find $$ldir -name '*.o'`; do \
                 filelist="$$filelist $$f"; \
             done; \
-            $(HOST_AR) $(HOST_GLOBAL_ARFLAGS) $(PRIVATE_ARFLAGS) $@ $$filelist
+            $(HOST_AR) $(HOST_GLOBAL_ARFLAGS) $(PRIVATE_ARFLAGS) $@ $$filelist;
+
         endef
         EOF
 
