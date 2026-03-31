@@ -1,0 +1,55 @@
+name: Build TWRP
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build TWRP for RCT6077W2
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Checkout Device Tree
+      uses: actions/checkout@v2
+      with:
+        path: device/rca/RCT6077W2
+
+    - name: Set up Build Environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git-core gnupg flex bison build-essential zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip jq bc ccache python2 python-is-python2
+    
+    - name: Install Repo
+      run: |
+        mkdir -p ~/bin
+        curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+        chmod a+x ~/bin/repo
+        echo "$HOME/bin" >> $GITHUB_PATH
+
+    - name: Sync TWRP Source (OmniROM 4.4)
+      run: |
+        mkdir ~/twrp
+        cd ~/twrp
+        git config --global user.name "actions"
+        git config --global user.email "actions@github.com"
+        ~/bin/repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_omni.git -b twrp-4.4
+        ~/bin/repo sync -c --no-clone-bundle --no-tags --optimized-fetch --prune --force-sync -j$(nproc --all)
+
+    - name: Copy Device Tree to Build Folder
+      run: |
+        mkdir -p ~/twrp/device/rca/RCT6077W2
+        cp -r device/rca/RCT6077W2/* ~/twrp/device/rca/RCT6077W2/
+
+    - name: Build TWRP Recovery
+      run: |
+        cd ~/twrp
+        export ALLOW_MISSING_DEPENDENCIES=true
+        source build/envsetup.sh
+        lunch omni_RCT6077W2-eng
+        mka recoveryimage || make recoveryimage
+
+    - name: Upload TWRP Image
+      uses: actions/upload-artifact@v3
+      with:
+        name: RCT6077W2_TWRP_Recovery
+        path: ~/twrp/out/target/product/RCT6077W2/recovery.img
