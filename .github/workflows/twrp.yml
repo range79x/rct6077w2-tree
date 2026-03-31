@@ -48,7 +48,7 @@ jobs:
         find build/ system/core/ external/sepolicy/ bionic/ -type f -name "*.mk" -exec sed -i 's/-Werror[-=a-zA-Z0-9]*//g' {} +
         cat << 'EOF' >> build/core/definitions.mk
 
-        define _extract-and-include-single-target-whole-static-lib
+        define extract-and-include-single-target-whole-static-lib
         @echo "preparing StaticLib: $(PRIVATE_MODULE)"
         $(hide) ldir=$(PRIVATE_INTERMEDIATES_DIR)/WHOLE/$(basename $(notdir $(1)))_objs;\
             rm -rf $$ldir; \
@@ -63,7 +63,7 @@ jobs:
 
         endef
 
-        define _extract-and-include-single-host-whole-static-lib
+        define extract-and-include-single-host-whole-static-lib
         @echo "preparing StaticLib: $(PRIVATE_MODULE)"
         $(hide) ldir=$(PRIVATE_INTERMEDIATES_DIR)/WHOLE/$(basename $(notdir $(1)))_objs;\
             rm -rf $$ldir; \
