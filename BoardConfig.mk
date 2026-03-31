@@ -24,7 +24,7 @@ RECOVERY_SDCARD_ON_DATA := true
 TARGET_RECOVERY_PIXEL_FORMAT := "RGBX_8888"
 
 # TWRP specific build flags
-TW_THEME := landscape_mdpi    # rk3026 tabletler genelde mdpi veya hdpi olur (160 dpi verilmiş)
+TW_THEME := landscape_mdpi
 RECOVERY_GRAPHICS_USE_LINELENGTH := true
 TW_NO_REBOOT_BOOTLOADER := true
 TW_HAS_DOWNLOAD_MODE := true
