@@ -46,7 +46,7 @@ jobs:
     - name: Fix Build Environment Bugs (GCC 9 & Ar Absolute Paths)
       run: |
         find build/ system/core/ external/sepolicy/ bionic/ -type f -name "*.mk" -exec sed -i 's/-Werror[-=a-zA-Z0-9]*//g' {} +
-        find build/core/combo -type f -name "*.mk" -exec sed -i 's/crsP/crs/g' {} +
+        sed -i 's/.* p $(1) $$f > $$ldir\/$$f;.*/        mkdir -p `dirname $$ldir\/$$f` \&\& &/g' build/core/definitions.mk
 
     - name: Build TWRP Recovery
       run: |
