@@ -53,3 +53,14 @@ jobs:
       with:
         name: RCT6077W2_TWRP_Recovery
         path: ~/twrp/out/target/product/RCT6077W2/recovery.img
+
+    - name: Upload to GitHub Releases
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ~/twrp/out/target/product/RCT6077W2/recovery.img
+        name: TWRP Recovery - RCA RCT6077W2
+        tag_name: twrp-${{ github.run_id }}
+        body: |
+          Auto-generated TWRP recovery image for RCA RCT6077W2 (RK3026).
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
