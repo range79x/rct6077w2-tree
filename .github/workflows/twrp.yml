@@ -46,38 +46,44 @@ jobs:
     - name: Fix Build Environment Bugs (GCC 9 & Ar Absolute Paths)
       run: |
         find build/ system/core/ external/sepolicy/ bionic/ -type f -name "*.mk" -exec sed -i 's/-Werror[-=a-zA-Z0-9]*//g' {} +
-        cat << 'EOF' >> build/core/definitions.mk
+        python3 - << 'PYEOF'
+import sys
 
-        define extract-and-include-single-target-whole-static-lib
-        @echo "preparing StaticLib: $(PRIVATE_MODULE)"
-        $(hide) ldir=$(PRIVATE_INTERMEDIATES_DIR)/WHOLE/$(basename $(notdir $(1)))_objs;\
-            rm -rf $$ldir; \
-            mkdir -p $$ldir; \
-            filelist=; \
-            for f in `$($(PRIVATE_2ND_ARCH_VAR_PREFIX)TARGET_AR) t $(1) | \grep -v '\.cpp' | \grep -v '\.cc' | \grep -v '\.c'`; do \
-                fflat=`echo $$f | tr '/' '_'`; \
-                $($(PRIVATE_2ND_ARCH_VAR_PREFIX)TARGET_AR) p $(1) $$f > $$ldir/$$fflat; \
-                filelist="$$filelist $$ldir/$$fflat"; \
-            done; \
-            $($(PRIVATE_2ND_ARCH_VAR_PREFIX)TARGET_AR) $($(PRIVATE_2ND_ARCH_VAR_PREFIX)TARGET_GLOBAL_ARFLAGS) $(PRIVATE_ARFLAGS) $@ $$filelist;
+macro_text = r"""
+define extract-and-include-single-target-whole-static-lib
+$(warning  preparing StaticLib: $(PRIVATE_MODULE) [including $(1)])
+$(hide) ldir=$(PRIVATE_INTERMEDIATES_DIR)/WHOLE/$(basename $(notdir $(1)))_objs;\
+    rm -rf $$ldir; \
+    mkdir -p $$ldir; \
+    filelist=; \
+    for f in `$($(PRIVATE_2ND_ARCH_VAR_PREFIX)TARGET_AR) t $(1)`; do \
+        fflat=`echo $$f | tr '/' '_'`; \
+        $($(PRIVATE_2ND_ARCH_VAR_PREFIX)TARGET_AR) p $(1) $$f > $$ldir/$$fflat; \
+        filelist="$$filelist $$ldir/$$fflat"; \
+    done; \
+    $($(PRIVATE_2ND_ARCH_VAR_PREFIX)TARGET_AR) $($(PRIVATE_2ND_ARCH_VAR_PREFIX)TARGET_GLOBAL_ARFLAGS) $(PRIVATE_ARFLAGS) $@ $$filelist
+endef
 
-        endef
+define extract-and-include-single-host-whole-static-lib
+$(warning  preparing StaticLib: $(PRIVATE_MODULE) [including $(1)])
+$(hide) ldir=$(PRIVATE_INTERMEDIATES_DIR)/WHOLE/$(basename $(notdir $(1)))_objs;\
+    rm -rf $$ldir; \
+    mkdir -p $$ldir; \
+    filelist=; \
+    for f in `$(HOST_AR) t $(1)`; do \
+        fflat=`echo $$f | tr '/' '_'`; \
+        $(HOST_AR) p $(1) $$f > $$ldir/$$fflat; \
+        filelist="$$filelist $$ldir/$$fflat"; \
+    done; \
+    $(HOST_AR) $(HOST_GLOBAL_ARFLAGS) $(PRIVATE_ARFLAGS) $@ $$filelist
+endef
+"""
 
-        define extract-and-include-single-host-whole-static-lib
-        @echo "preparing StaticLib: $(PRIVATE_MODULE)"
-        $(hide) ldir=$(PRIVATE_INTERMEDIATES_DIR)/WHOLE/$(basename $(notdir $(1)))_objs;\
-            rm -rf $$ldir; \
-            mkdir -p $$ldir; \
-            filelist=; \
-            for f in `$(HOST_AR) t $(1) | \grep -v '\.cpp' | \grep -v '\.cc' | \grep -v '\.c'`; do \
-                fflat=`echo $$f | tr '/' '_'`; \
-                $(HOST_AR) p $(1) $$f > $$ldir/$$fflat; \
-                filelist="$$filelist $$ldir/$$fflat"; \
-            done; \
-            $(HOST_AR) $(HOST_GLOBAL_ARFLAGS) $(PRIVATE_ARFLAGS) $@ $$filelist;
+with open('build/core/definitions.mk', 'a') as f:
+    f.write(macro_text)
 
-        endef
-        EOF
+print("Patched build/core/definitions.mk successfully.")
+PYEOF
 
     - name: Build TWRP Recovery
       run: |
