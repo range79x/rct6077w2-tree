@@ -45,9 +45,9 @@ jobs:
 
     - name: Fix GCC 9 Compilation Warnings (-Werror)
       run: |
-        find build/ -type f -name "*.mk" -exec sed -i 's/-Werror\b//g' {} +
-        find system/core/ -type f -name "*.mk" -exec sed -i 's/-Werror\b//g' {} +
-        find external/sepolicy/ -type f -name "*.mk" -exec sed -i 's/-Werror\b//g' {} +
+        find build/ -type f -name "*.mk" -exec sed -i 's/-Werror[^ ]*//g' {} +
+        find system/core/ -type f -name "*.mk" -exec sed -i 's/-Werror[^ ]*//g' {} +
+        find external/sepolicy/ -type f -name "*.mk" -exec sed -i 's/-Werror[^ ]*//g' {} +
 
     - name: Build TWRP Recovery
       run: |
