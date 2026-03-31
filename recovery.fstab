@@ -1,7 +1,8 @@
-# RCT6077W2 Recovery fstab
-/dev/block/mtdblock7  /system   ext4  ro,barrier=1  wait
-/dev/block/mtdblock8  /data     ext4  rw,nosuid,nodev,noatime,nodiratime,barrier=1  wait
-/dev/block/mtdblock5  /cache    ext4  rw,nosuid,nodev,noatime,nodiratime,barrier=1  wait
-/dev/block/mtdblock2  /boot     emmc  rw  wait
-/dev/block/mtdblock3  /recovery emmc  rw  wait
-/dev/block/mtdblock4  /backup   emmc  rw  wait
+# mount point   fstype  device                  [device2]   flags
+/boot           mtd     boot
+/cache          ext4    /dev/block/mtdblock5
+/data           ext4    /dev/block/mtdblock8    flags=backup=1;userdataencryptable=1;wipeduringfactoryreset
+/misc           mtd     misc
+/recovery       mtd     recovery                flags=backup=1
+/system         ext4    /dev/block/mtdblock7    flags=backup=1;wipeingui
+/external_sd    vfat    /dev/block/mmcblk0p1    /dev/block/mmcblk0  flags=display="Micro SDcard";storage;wipeingui;removable

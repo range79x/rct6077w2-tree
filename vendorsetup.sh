@@ -1,0 +1,2 @@
+add_lunch_combo omni_RCT6077W2-userdebug
+add_lunch_combo omni_RCT6077W2-eng
