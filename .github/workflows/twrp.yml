@@ -43,9 +43,10 @@ jobs:
         mkdir -p device/rca/RCT6077W2
         cp -r my_device_tree/* device/rca/RCT6077W2/
 
-    - name: Fix GCC 9 Compilation Warnings (-Werror)
+    - name: Fix Build Environment Bugs (GCC 9 & Ar Absolute Paths)
       run: |
         find build/ system/core/ external/sepolicy/ bionic/ -type f -name "*.mk" -exec sed -i 's/-Werror[-=a-zA-Z0-9]*//g' {} +
+        sed -i 's/$$ldir\/$$f/$$ldir\/`basename $$f`/g' build/core/definitions.mk
 
     - name: Build TWRP Recovery
       run: |
