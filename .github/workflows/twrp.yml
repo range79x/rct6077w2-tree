@@ -46,7 +46,38 @@ jobs:
     - name: Fix Build Environment Bugs (GCC 9 & Ar Absolute Paths)
       run: |
         find build/ system/core/ external/sepolicy/ bionic/ -type f -name "*.mk" -exec sed -i 's/-Werror[-=a-zA-Z0-9]*//g' {} +
-        sed -i 's/.* p $(1) $$f > $$ldir\/$$f;.*/        mkdir -p `dirname $$ldir\/$$f` \&\& &/g' build/core/definitions.mk
+        cat << 'EOF' >> build/core/definitions.mk
+        define _extract-and-include-single-target-whole-static-lib
+        @echo "preparing StaticLib: $(PRIVATE_MODULE)"
+        $(hide) ldir=$(PRIVATE_INTERMEDIATES_DIR)/WHOLE/$(basename $(notdir $(1)))_objs;\
+            rm -rf $$ldir; \
+            mkdir -p $$ldir; \
+            cp $(1) $$ldir; \
+            pwd=`pwd`; \
+            cd $$ldir; $($(PRIVATE_2ND_ARCH_VAR_PREFIX)TARGET_AR) x $(notdir $(1)); \
+            cd $$pwd; \
+            filelist=; \
+            for f in `find $$ldir -name '*.o'`; do \
+                filelist="$$filelist $$f"; \
+            done; \
+            $($(PRIVATE_2ND_ARCH_VAR_PREFIX)TARGET_AR) $($(PRIVATE_2ND_ARCH_VAR_PREFIX)TARGET_GLOBAL_ARFLAGS) $(PRIVATE_ARFLAGS) $@ $$filelist
+        endef
+        define _extract-and-include-single-host-whole-static-lib
+        @echo "preparing StaticLib: $(PRIVATE_MODULE)"
+        $(hide) ldir=$(PRIVATE_INTERMEDIATES_DIR)/WHOLE/$(basename $(notdir $(1)))_objs;\
+            rm -rf $$ldir; \
+            mkdir -p $$ldir; \
+            cp $(1) $$ldir; \
+            pwd=`pwd`; \
+            cd $$ldir; $(HOST_AR) x $(notdir $(1)); \
+            cd $$pwd; \
+            filelist=; \
+            for f in `find $$ldir -name '*.o'`; do \
+                filelist="$$filelist $$f"; \
+            done; \
+            $(HOST_AR) $(HOST_GLOBAL_ARFLAGS) $(PRIVATE_ARFLAGS) $@ $$filelist
+        endef
+        EOF
 
     - name: Build TWRP Recovery
       run: |
