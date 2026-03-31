@@ -53,13 +53,11 @@ jobs:
         $(hide) ldir=$(PRIVATE_INTERMEDIATES_DIR)/WHOLE/$(basename $(notdir $(1)))_objs;\
             rm -rf $$ldir; \
             mkdir -p $$ldir; \
-            cp $(1) $$ldir; \
-            pwd=`pwd`; \
-            cd $$ldir; $($(PRIVATE_2ND_ARCH_VAR_PREFIX)TARGET_AR) x $(notdir $(1)); \
-            cd $$pwd; \
             filelist=; \
-            for f in `find $$ldir -name '*.o'`; do \
-                filelist="$$filelist $$f"; \
+            for f in `$($(PRIVATE_2ND_ARCH_VAR_PREFIX)TARGET_AR) t $(1) | \grep -v '\.cpp' | \grep -v '\.cc' | \grep -v '\.c'`; do \
+                fflat=`echo $$f | tr '/' '_'`; \
+                $($(PRIVATE_2ND_ARCH_VAR_PREFIX)TARGET_AR) p $(1) $$f > $$ldir/$$fflat; \
+                filelist="$$filelist $$ldir/$$fflat"; \
             done; \
             $($(PRIVATE_2ND_ARCH_VAR_PREFIX)TARGET_AR) $($(PRIVATE_2ND_ARCH_VAR_PREFIX)TARGET_GLOBAL_ARFLAGS) $(PRIVATE_ARFLAGS) $@ $$filelist;
 
@@ -70,13 +68,11 @@ jobs:
         $(hide) ldir=$(PRIVATE_INTERMEDIATES_DIR)/WHOLE/$(basename $(notdir $(1)))_objs;\
             rm -rf $$ldir; \
             mkdir -p $$ldir; \
-            cp $(1) $$ldir; \
-            pwd=`pwd`; \
-            cd $$ldir; $(HOST_AR) x $(notdir $(1)); \
-            cd $$pwd; \
             filelist=; \
-            for f in `find $$ldir -name '*.o'`; do \
-                filelist="$$filelist $$f"; \
+            for f in `$(HOST_AR) t $(1) | \grep -v '\.cpp' | \grep -v '\.cc' | \grep -v '\.c'`; do \
+                fflat=`echo $$f | tr '/' '_'`; \
+                $(HOST_AR) p $(1) $$f > $$ldir/$$fflat; \
+                filelist="$$filelist $$ldir/$$fflat"; \
             done; \
             $(HOST_AR) $(HOST_GLOBAL_ARFLAGS) $(PRIVATE_ARFLAGS) $@ $$filelist;
 
