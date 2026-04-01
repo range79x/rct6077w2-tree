@@ -6,14 +6,28 @@
 
 ## Flash
 
-Download `recovery.img` or `TWRP_RCT6077W2.zip` from [Releases](../../releases).
+> [!WARNING]
+> Stock recovery will reject the flashable ZIP because it is not signed. Do **not** try to flash `TWRP_RCT6077W2.zip` via the stock recovery menu ("Apply update from ADB/external storage").
 
+Download `recovery.img` from [Releases](../../releases) and flash it directly to the partition:
+
+### 1. via `rkdeveloptool` (Linux)
+Put the device in **Loader Mode** (hold Vol+ + USB) and run:
 ```bash
-# via ADB
-adb push recovery.img /sdcard/recovery.img
-adb shell flash_image recovery /sdcard/recovery.img
+sudo rkdeveloptool write-partition recovery recovery.img
+sudo rkdeveloptool reboot
 ```
 
-Or use **RKAndroidTool** (Windows) in loader mode (hold Vol+ + USB).
+### 2. via Rooted Shell (Android)
+If the device is already rooted:
+```bash
+adb push recovery.img /sdcard/recovery.img
+adb shell
+su
+dd if=/sdcard/recovery.img of=/dev/mtdblock3 bs=4096
+# To prevent stock recovery from being restored:
+mount -o remount,rw /system
+mv /system/bin/install-recovery.sh /system/bin/install-recovery.sh.bak
+```
 
 > Recovery partition: `mtd3` → `/dev/mtd3` (NAND, 32 MB)
