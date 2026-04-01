@@ -43,17 +43,18 @@ jobs:
     - name: Copy Device Tree to Build Folder
       run: |
         mkdir -p device/rca/RCT6077W2
-        cp -r my_device_tree/* device/rca/RCT6077W2/
+        cp -av my_device_tree/. device/rca/RCT6077W2/
         # Remove pre-built stock ramdisk if it exists to force building from source
         rm -f device/rca/RCT6077W2/ramdisk.gz
+        # Verify files are present
+        ls -l device/rca/RCT6077W2/
 
     - name: Fix Build Environment Bugs (GCC 9 & Ar Absolute Paths)
       run: |
-        # Strip -Werror from ALL .mk files (not just a few dirs) to avoid gcc9/clang strict errors
+        # Strip -Werror from ALL .mk files
         find . -type f -name "*.mk" -not -path "./.repo/*" -not -path "./out/*" \
           -exec sed -i 's/-Werror[-=a-zA-Z0-9]*//g' {} +
-        # Create an ar wrapper at /usr/local/bin (before /usr/bin in PATH).
-        # Strips the P flag so ar stores basenames instead of absolute paths.
+        # Create an ar wrapper
         printf '%s\n' \
           '#!/bin/bash' \
           'REAL_AR=/usr/bin/ar' \
@@ -65,8 +66,9 @@ jobs:
           'exec "$REAL_AR" "${NEWARGS[@]}"' \
           > /usr/local/bin/ar
         chmod +x /usr/local/bin/ar
-        # Use gnu++11 (not c++11) to allow PRIu64-style string macro concatenation
-        echo 'COMMON_GLOBAL_CPPFLAGS += -std=gnu++11' >> build/core/envsetup.mk
+        # Fix GCC 9+ BusyBox and other legacy code errors (static inline, unused-result, array-bounds, etc.)
+        echo 'COMMON_GLOBAL_CFLAGS += -fcommon -Wno-error=unused-result -Wno-error=array-bounds -Wno-error=stringop-overflow' >> build/core/envsetup.mk
+        echo 'COMMON_GLOBAL_CPPFLAGS += -fcommon -Wno-error=unused-result -Wno-error=array-bounds -Wno-error=stringop-overflow -std=gnu++11' >> build/core/envsetup.mk
 
     - name: Build TWRP Recovery
       run: |
