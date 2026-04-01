@@ -14,20 +14,22 @@ Download `recovery.img` from [Releases](../../releases) and flash it directly to
 ### 1. via `rkdeveloptool` (Linux)
 Put the device in **Loader Mode** (hold Vol+ + USB) and run:
 ```bash
-sudo rkdeveloptool write-partition recovery recovery.img
-sudo rkdeveloptool reboot
+# Flash to both recovery (0x10000) and backup (0x20000) to bypass restoration
+sudo rkdeveloptool wl 0x10000 recovery.img
+sudo rkdeveloptool wl 0x20000 recovery.img
+sudo rkdeveloptool rd
 ```
 
 ### 2. via Rooted Shell (Android)
 If the device is already rooted:
 ```bash
+# Flash to both partitions and boot straight to recovery
 adb push recovery.img /sdcard/recovery.img
 adb shell
 su
 dd if=/sdcard/recovery.img of=/dev/mtdblock3 bs=4096
-# To prevent stock recovery from being restored:
-mount -o remount,rw /system
-mv /system/bin/install-recovery.sh /system/bin/install-recovery.sh.bak
+dd if=/sdcard/recovery.img of=/dev/mtdblock4 bs=4096
+reboot recovery
 ```
 
 > Recovery partition: `mtd3` → `/dev/mtd3` (NAND, 32 MB)
