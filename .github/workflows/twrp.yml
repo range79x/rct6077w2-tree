@@ -47,19 +47,17 @@ jobs:
       run: |
         find build/ system/core/ external/sepolicy/ bionic/ -type f -name "*.mk" -exec sed -i 's/-Werror[-=a-zA-Z0-9]*//g' {} +
         # Create an ar wrapper at /usr/local/bin (before /usr/bin in PATH).
-        # It strips the 'P' flag (which causes ar to store full absolute paths as member names)
-        # before forwarding to the real ar. This fixes the double-slash extraction bug without
-        # any Make variable or macro patching.
-        cat > /usr/local/bin/ar << 'WRAPPER'
-#!/bin/bash
-REAL_AR=/usr/bin/ar
-NEWARGS=()
-for arg in "$@"; do
-  # Strip P from any flag argument (e.g. crsP -> crs, crsPS -> crsS)
-  NEWARGS+=("${arg//P/}")
-done
-exec "$REAL_AR" "${NEWARGS[@]}"
-WRAPPER
+        # Strips the P flag so ar stores basenames instead of absolute paths.
+        printf '%s\n' \
+          '#!/bin/bash' \
+          'REAL_AR=/usr/bin/ar' \
+          'NEWARGS=()' \
+          'for arg in "$@"; do' \
+          '  [[ "$arg" =~ ^[a-zA-Z]+$ ]] && arg="${arg//P/}"' \
+          '  NEWARGS+=("$arg")' \
+          'done' \
+          'exec "$REAL_AR" "${NEWARGS[@]}"' \
+          > /usr/local/bin/ar
         chmod +x /usr/local/bin/ar
 
     - name: Build TWRP Recovery
