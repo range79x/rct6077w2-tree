@@ -2,6 +2,15 @@
 # TWRP Recovery Flasher for RCA RCT6077W2 (RK3026)
 # Recovery partition: mtd3 (/dev/mtd3, /dev/mtdblock3), size: 32MB
 
+# Recovery control pipe (passed as $2 to update-binary)
+OUTFD=$2
+ZIP=$3
+
+ui_print() {
+    echo "ui_print $1" > /proc/self/fd/$OUTFD
+    echo "ui_print " > /proc/self/fd/$OUTFD
+}
+
 RECOVERY_IMG=/tmp/recovery.img
 
 ui_print "========================================="
@@ -10,7 +19,14 @@ ui_print "========================================="
 ui_print " Recovery partition: /dev/mtd3 (NAND)"
 ui_print ""
 
-package_extract_file "recovery.img" "$RECOVERY_IMG"
+# Extract recovery.img from ZIP (passed as $3)
+ui_print "Extracting recovery image..."
+unzip -p "$ZIP" "recovery.img" > "$RECOVERY_IMG"
+
+if [ ! -f "$RECOVERY_IMG" ] || [ ! -s "$RECOVERY_IMG" ]; then
+    ui_print "ERROR: recovery.img not found in ZIP!"
+    exit 1
+fi
 
 ui_print "Flashing recovery..."
 
