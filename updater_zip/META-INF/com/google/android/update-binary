@@ -1,0 +1,39 @@
+#!/sbin/sh
+# TWRP Recovery Flasher for RCA RCT6077W2 (RK3026)
+# Recovery partition: mtd3 (/dev/mtd3, /dev/mtdblock3), size: 32MB
+
+RECOVERY_IMG=/tmp/recovery.img
+
+ui_print "========================================="
+ui_print " TWRP Recovery for RCA RCT6077W2 (RK3026)"
+ui_print "========================================="
+ui_print " Recovery partition: /dev/mtd3 (NAND)"
+ui_print ""
+
+package_extract_file "recovery.img" "$RECOVERY_IMG"
+
+ui_print "Flashing recovery..."
+
+if command -v flash_image > /dev/null 2>&1; then
+    # Preferred: Android's built-in MTD flash tool
+    ui_print "Using flash_image..."
+    flash_image recovery "$RECOVERY_IMG"
+elif command -v nandwrite > /dev/null 2>&1; then
+    # Alternative: mtd-utils
+    ui_print "Using nandwrite..."
+    flash_erase /dev/mtd3 0 0
+    nandwrite -p /dev/mtd3 "$RECOVERY_IMG"
+else
+    # Last resort: direct block write (eraseblock-aligned)
+    ui_print "Using dd to /dev/mtdblock3..."
+    dd if="$RECOVERY_IMG" of=/dev/mtdblock3 bs=4096
+fi
+
+if [ $? -eq 0 ]; then
+    ui_print ""
+    ui_print "Recovery flashed successfully!"
+    ui_print "Hold Vol-Down + Power to boot into TWRP."
+else
+    ui_print "ERROR: Flashing failed!"
+    exit 1
+fi
