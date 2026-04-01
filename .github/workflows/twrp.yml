@@ -46,13 +46,21 @@ jobs:
     - name: Fix Build Environment Bugs (GCC 9 & Ar Absolute Paths)
       run: |
         find build/ system/core/ external/sepolicy/ bionic/ -type f -name "*.mk" -exec sed -i 's/-Werror[-=a-zA-Z0-9]*//g' {} +
-        # The HOST ar flags include 'P' which stores full absolute paths as archive member names.
-        # ar t then returns absolute paths, so '$$ldir/$$f' becomes a double-slash invalid path.
-        # Strip 'P' so ar stores only basenames, matching how TARGET_GLOBAL_ARFLAGS already works.
-        find build/ -name '*.mk' -exec grep -l 'HOST_GLOBAL_ARFLAGS' {} + | \
-          xargs sed -i 's/HOST_GLOBAL_ARFLAGS\s*:=\s*crsP/HOST_GLOBAL_ARFLAGS := crs/g'
-        # Belt-and-suspenders: also append override in case the variable is set elsewhere
-        echo 'HOST_GLOBAL_ARFLAGS := crs' >> build/core/config.mk
+        # Create an ar wrapper at /usr/local/bin (before /usr/bin in PATH).
+        # It strips the 'P' flag (which causes ar to store full absolute paths as member names)
+        # before forwarding to the real ar. This fixes the double-slash extraction bug without
+        # any Make variable or macro patching.
+        cat > /usr/local/bin/ar << 'WRAPPER'
+#!/bin/bash
+REAL_AR=/usr/bin/ar
+NEWARGS=()
+for arg in "$@"; do
+  # Strip P from any flag argument (e.g. crsP -> crs, crsPS -> crsS)
+  NEWARGS+=("${arg//P/}")
+done
+exec "$REAL_AR" "${NEWARGS[@]}"
+WRAPPER
+        chmod +x /usr/local/bin/ar
 
     - name: Build TWRP Recovery
       run: |
