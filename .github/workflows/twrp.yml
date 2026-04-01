@@ -44,6 +44,9 @@ jobs:
       run: |
         mkdir -p device/rca/RCT6077W2
         cp -r my_device_tree/* device/rca/RCT6077W2/
+        # Remove pre-built stock ramdisk and kernel if they exist to force building from source
+        rm -f device/rca/RCT6077W2/ramdisk.gz
+        rm -f device/rca/RCT6077W2/kernel
 
     - name: Fix Build Environment Bugs (GCC 9 & Ar Absolute Paths)
       run: |
@@ -70,7 +73,24 @@ jobs:
       run: |
         export ALLOW_MISSING_DEPENDENCIES=true
         export LC_ALL=C
+        # Add TWRP-specific build flags to environment
+        export TW_THEME=landscape_mdpi
         bash -c "source build/envsetup.sh && lunch omni_RCT6077W2-eng && mka recoveryimage"
+
+    - name: Verify Recovery Image Content
+      run: |
+        RECOVERY_IMG=out/target/product/RCT6077W2/recovery.img
+        if [ ! -f "$RECOVERY_IMG" ]; then
+          echo "ERROR: recovery.img not found!"
+          exit 1
+        fi
+        # Check for TWRP/TeamWin strings
+        if ! strings "$RECOVERY_IMG" | grep -Ei "TWRP|TeamWin" > /dev/null; then
+          echo "WARNING: Serial search for 'TWRP' or 'TeamWin' failed. This image might be STOCK recovery."
+          # We don't exit here because some valid TWRP images might be compressed, but we log it.
+        else
+          echo "SUCCESS: Found TWRP/TeamWin strings in the built image."
+        fi
 
     - name: Package as Flashable Zip
       run: |

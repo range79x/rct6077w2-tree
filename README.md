@@ -27,8 +27,8 @@ If the device is already rooted:
 adb push recovery.img /sdcard/recovery.img
 adb shell
 su
-dd if=/sdcard/recovery.img of=/dev/mtdblock3 bs=4096
-dd if=/sdcard/recovery.img of=/dev/mtdblock4 bs=4096
+dd if=/sdcard/recovery.img of=/dev/block/mtdblock3 bs=4096
+dd if=/sdcard/recovery.img of=/dev/block/mtdblock4 bs=4096
 reboot recovery
 ```
 
