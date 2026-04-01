@@ -44,9 +44,8 @@ jobs:
       run: |
         mkdir -p device/rca/RCT6077W2
         cp -r my_device_tree/* device/rca/RCT6077W2/
-        # Remove pre-built stock ramdisk and kernel if they exist to force building from source
+        # Remove pre-built stock ramdisk if it exists to force building from source
         rm -f device/rca/RCT6077W2/ramdisk.gz
-        rm -f device/rca/RCT6077W2/kernel
 
     - name: Fix Build Environment Bugs (GCC 9 & Ar Absolute Paths)
       run: |
