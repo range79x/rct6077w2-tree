@@ -45,7 +45,9 @@ jobs:
 
     - name: Fix Build Environment Bugs (GCC 9 & Ar Absolute Paths)
       run: |
-        find build/ system/core/ external/sepolicy/ bionic/ -type f -name "*.mk" -exec sed -i 's/-Werror[-=a-zA-Z0-9]*//g' {} +
+        # Strip -Werror from ALL .mk files (not just a few dirs) to avoid gcc9/clang strict errors
+        find . -type f -name "*.mk" -not -path "./.repo/*" -not -path "./out/*" \
+          -exec sed -i 's/-Werror[-=a-zA-Z0-9]*//g' {} +
         # Create an ar wrapper at /usr/local/bin (before /usr/bin in PATH).
         # Strips the P flag so ar stores basenames instead of absolute paths.
         printf '%s\n' \
@@ -59,8 +61,8 @@ jobs:
           'exec "$REAL_AR" "${NEWARGS[@]}"' \
           > /usr/local/bin/ar
         chmod +x /usr/local/bin/ar
-        # TWRP recovery uses nullptr (C++11). Add -std=c++11 globally.
-        echo 'COMMON_GLOBAL_CPPFLAGS += -std=c++11' >> build/core/envsetup.mk
+        # Use gnu++11 (not c++11) to allow PRIu64-style string macro concatenation
+        echo 'COMMON_GLOBAL_CPPFLAGS += -std=gnu++11' >> build/core/envsetup.mk
 
     - name: Build TWRP Recovery
       run: |
