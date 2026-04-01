@@ -67,8 +67,8 @@ jobs:
           > /usr/local/bin/ar
         chmod +x /usr/local/bin/ar
         # Fix GCC 9+ BusyBox and other legacy code errors (static inline, unused-result, array-bounds, etc.)
-        echo 'COMMON_GLOBAL_CFLAGS += -fcommon -Wno-error=unused-result -Wno-error=array-bounds -Wno-error=stringop-overflow' >> build/core/envsetup.mk
-        echo 'COMMON_GLOBAL_CPPFLAGS += -fcommon -Wno-error=unused-result -Wno-error=array-bounds -Wno-error=stringop-overflow -std=gnu++11' >> build/core/envsetup.mk
+        echo 'COMMON_GLOBAL_CFLAGS += -fcommon -w' >> build/core/envsetup.mk
+        echo 'COMMON_GLOBAL_CPPFLAGS += -fcommon -w -std=gnu++11' >> build/core/envsetup.mk
 
     - name: Build TWRP Recovery
       run: |
