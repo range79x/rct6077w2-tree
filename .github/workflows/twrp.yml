@@ -46,36 +46,13 @@ jobs:
     - name: Fix Build Environment Bugs (GCC 9 & Ar Absolute Paths)
       run: |
         find build/ system/core/ external/sepolicy/ bionic/ -type f -name "*.mk" -exec sed -i 's/-Werror[-=a-zA-Z0-9]*//g' {} +
-        printf '%s\n' \
-          '' \
-          'define extract-and-include-single-target-whole-static-lib' \
-          '$(warning  preparing StaticLib: $(PRIVATE_MODULE) [including $(1)])' \
-          '$(hide) ldir=$(PRIVATE_INTERMEDIATES_DIR)/WHOLE/$(basename $(notdir $(1)))_objs;\' \
-          '    rm -rf $$ldir; \' \
-          '    mkdir -p $$ldir; \' \
-          '    filelist=; \' \
-          '    for f in `$($(PRIVATE_2ND_ARCH_VAR_PREFIX)TARGET_AR) t $(1)`; do \' \
-          '        fflat=`echo $$f | tr '"'"'/'"'"' '"'"'_'"'"'`; \' \
-          '        $($(PRIVATE_2ND_ARCH_VAR_PREFIX)TARGET_AR) p $(1) $$f > $$ldir/$$fflat; \' \
-          '        filelist="$$filelist $$ldir/$$fflat"; \' \
-          '    done; \' \
-          '    $($(PRIVATE_2ND_ARCH_VAR_PREFIX)TARGET_AR) $($(PRIVATE_2ND_ARCH_VAR_PREFIX)TARGET_GLOBAL_ARFLAGS) $(PRIVATE_ARFLAGS) $$@ $$filelist' \
-          'endef' \
-          '' \
-          'define extract-and-include-single-host-whole-static-lib' \
-          '$(warning  preparing StaticLib: $(PRIVATE_MODULE) [including $(1)])' \
-          '$(hide) ldir=$(PRIVATE_INTERMEDIATES_DIR)/WHOLE/$(basename $(notdir $(1)))_objs;\' \
-          '    rm -rf $$ldir; \' \
-          '    mkdir -p $$ldir; \' \
-          '    filelist=; \' \
-          '    for f in `$(HOST_AR) t $(1)`; do \' \
-          '        fflat=`echo $$f | tr '"'"'/'"'"' '"'"'_'"'"'`; \' \
-          '        $(HOST_AR) p $(1) $$f > $$ldir/$$fflat; \' \
-          '        filelist="$$filelist $$ldir/$$fflat"; \' \
-          '    done; \' \
-          '    $(HOST_AR) $(HOST_GLOBAL_ARFLAGS) $(PRIVATE_ARFLAGS) $$@ $$filelist' \
-          'endef' \
-          >> build/core/definitions.mk
+        # The HOST ar flags include 'P' which stores full absolute paths as archive member names.
+        # ar t then returns absolute paths, so '$$ldir/$$f' becomes a double-slash invalid path.
+        # Strip 'P' so ar stores only basenames, matching how TARGET_GLOBAL_ARFLAGS already works.
+        find build/ -name '*.mk' -exec grep -l 'HOST_GLOBAL_ARFLAGS' {} + | \
+          xargs sed -i 's/HOST_GLOBAL_ARFLAGS\s*:=\s*crsP/HOST_GLOBAL_ARFLAGS := crs/g'
+        # Belt-and-suspenders: also append override in case the variable is set elsewhere
+        echo 'HOST_GLOBAL_ARFLAGS := crs' >> build/core/config.mk
 
     - name: Build TWRP Recovery
       run: |
