@@ -59,6 +59,8 @@ jobs:
           'exec "$REAL_AR" "${NEWARGS[@]}"' \
           > /usr/local/bin/ar
         chmod +x /usr/local/bin/ar
+        # TWRP recovery uses nullptr (C++11). Add -std=c++11 globally.
+        echo 'COMMON_GLOBAL_CPPFLAGS += -std=c++11' >> build/core/envsetup.mk
 
     - name: Build TWRP Recovery
       run: |
