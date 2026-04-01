@@ -78,15 +78,26 @@ jobs:
         ZIP_DIR=twrp_zip
         mkdir -p $ZIP_DIR/META-INF/com/google/android
         cp $RECOVERY_IMG $ZIP_DIR/recovery.img
-        # update-binary: shell script that flashes recovery.img to mmcblk0p5 (recovery partition)
+        # update-binary for RCT6077W2:
+        # Recovery is on MTD NAND partition mtd3 (/dev/mtd3).
+        # flash_image is the standard Android MTD flash tool (handles erase+write).
+        # Falls back to nandwrite if flash_image is unavailable.
         printf '%s\n' \
           '#!/sbin/sh' \
           'RECOVERY_IMG=/tmp/recovery.img' \
-          'ui_print "TWRP Recovery for RCA RCT6077W2"' \
-          'ui_print "Flashing recovery.img..."' \
+          'ui_print "TWRP Recovery for RCA RCT6077W2 (RK3026)"' \
+          'ui_print "Recovery partition: /dev/mtd3 (mtd3, NAND)"' \
           'package_extract_file "recovery.img" "$RECOVERY_IMG"' \
-          'dd if="$RECOVERY_IMG" of=/dev/block/mtd/by-name/recovery' \
-          'ui_print "Done! Reboot to recovery."' \
+          'ui_print "Flashing recovery..."' \
+          'if command -v flash_image > /dev/null 2>&1; then' \
+          '  flash_image recovery "$RECOVERY_IMG"' \
+          'elif command -v nandwrite > /dev/null 2>&1; then' \
+          '  flash_erase /dev/mtd3 0 0' \
+          '  nandwrite -p /dev/mtd3 "$RECOVERY_IMG"' \
+          'else' \
+          '  dd if="$RECOVERY_IMG" of=/dev/mtdblock3 bs=4096' \
+          'fi' \
+          'ui_print "Done! Hold Vol-Down + Power to boot TWRP."' \
           > $ZIP_DIR/META-INF/com/google/android/update-binary
         echo 'assert(true);' > $ZIP_DIR/META-INF/com/google/android/updater-script
         cd $ZIP_DIR && zip -r ../TWRP_RCT6077W2.zip . && cd ..
